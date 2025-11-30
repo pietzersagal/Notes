@@ -175,7 +175,23 @@ As a bit of a preface there are many different configurations of Linux, you may 
 12. You can now observe that you are receiving logs from the host via your agent. Congratulations! ![[https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent10.png]]
 ## Connecting a Windows Agent
 
-TBD
+This will be very similar to connecting a Linux agent. As a matter of fact we are changing very little. However, I wanted to make this a different section to show you the slight differences. As before the commands entered here are done on a windows host and **NOT** our SIEM host.
+
+1. From the home page, click on the three bars in the top left and select Management -> Integrations.![[Windows1.png]]
+2. On the integrations page, type in "Windows" into the search bar and select the Windows Integration.![[Windows2.png]]
+3. On the windows integration page, click Add Windows![[Windows3.png]]
+4. Give your integration a meaningful name and description. Then go into "Collect events from the following Windows event log channels:", then modify this to as you see fit. The more boxes you check the more logs your SIEM will have to process. However it is highly recommended that you install Sysmon on your host and check the "Sysmon Operational" box. Personally I also like to check the "Preserve original event" for the Sysmon logs as well. You can find the Sysmon download [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) and I recommend to start out with one of the community Sysmon config files such as the one from SwiftOnSecurity found [here](https://github.com/SwiftOnSecurity/sysmon-config?tab=readme-ov-file).![[Windows4.png]]![[Windows5.png]]
+5. Next give you new agent policy a name and click "Save and continue" in the bottom right.![[Windows6.png]]
+6. Next on the window that has popped up click "Add Elastic Agent to your hosts"![[Windows7.png]]
+7. You'll now be back on the Windows integration page, click on "Add agent" for your newly created integration.![[Windows8.png]]
+8. Skip over step one and in step two select your OS and architecture/preferred way of installation. For me is is "Windows MSI".![[Windows9.png]]
+9. Now, open PowerShell **as administrator**. And paste the text provided to you by elastic in your PowerShell terminal. After you run the code, you'll see something similar to the following in the terminal awaiting you to press enter
+   `> .\elastic-agent-9.2.1-windows-x86_64.msi --% INSTALLARGS="--url=https://172.16.0.13:8220 --enrollment-token=RG9uJ3QgdXNlIG15IGVucm9sbG1lbnQga2V5LCBnbyBnZXQgeW91ciBvd24hID46KA=="`
+   Since we are in charge of our own certificates we will have to append `--insecure` to the INSTALLARGS variable. So you should change your command to look something like the following: `> .\elastic-agent-9.2.1-windows-x86_64.msi --% INSTALLARGS="--url=https://172.16.0.13:8220 --enrollment-token=RG9uJ3QgdXNlIG15IGVucm9sbG1lbnQga2V5LCBnbyBnZXQgeW91ciBvd24hID46KA== --insecure"`
+10. Next just follow the provided installation wizard. ![[Windows10.png]]
+11. After this you'll get confirmation back in your browser window that your windows host is now sending logs to elastic.![[Windows11.png]]
+12. Now click on the three bars in the top left and go to Analytics > Discover.![[Windows12.png]]
+13. You'll now be able to confirm that your windows host is sending logs to your SIEM. Congratulations. ![[Windows13.png]]
 
 ## Configuring alerts
 ### What to Create Alerts On
