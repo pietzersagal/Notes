@@ -42,7 +42,7 @@ Luckily the installation of Elastic Search is pretty straight forward to the off
    `$ echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/9.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-9.x.list`
 4. Next, update and install
    `$ sudo apt-get update && sudo apt-get install elasticsearch`
-5. Observe the output of installing elastic search: ![[https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Installation_Output.png]]
+5. Observe the output of installing elastic search: ![Elastic_Installation_Output.png](/Images/Elastic_SIEM/Elastic_Installation_Output.png)
    Here we can see in the output a password is generated for our build in user, "NH7AQphIpvhxcEL-ZE6n". On your installation please keep note of this password. If you have lost this password then you will have to generate a new one with `/usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic` or as your output directs you to. 
 6. Now obtain your IP address then open `/etc/elasticsearch/elasticsearch.yml` in your text editor of choice. Uncomment the line
    `#network.host: 192.168.0.1`
@@ -230,6 +230,7 @@ Solely for accessing the SIEM you only need the following ports open:
 | TCP/9200    | Elastic Search |
 | TCP/5601    | Kibana         |
 | TCP/8220    | Fleet          |
+
 You can drop all other traffic. However, if you access your server with ssh or have any other services that are running on the machine, make sure to add those to your firewall before dropping all other traffic and enabling the firewall.
 
 ## Kibana
