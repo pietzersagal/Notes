@@ -193,10 +193,10 @@ This will be very similar to connecting a Linux agent. As a matter of fact we ar
 12. Now click on the three bars in the top left and go to Analytics > Discover.![[Windows12.png]]
 13. You'll now be able to confirm that your windows host is sending logs to your SIEM. Congratulations. ![[Windows13.png]]
 
-## Configuring alerts
-### What to Create Alerts On
+# Configuring alerts
+## What to Create Alerts On
 The primary purpose of your SIEM should be to keep an eye on all of your machines. However, it is not reasonable to search for IOC on **every** host that you connect. So you should create alerts to notify you when something should be investigated. This can be a hard thing to do and there are many ways to go about it. One thing is true regardless, your alerting rules will continue to grow and change over time. In my personal opinion, the best place to start is with the [MITRE ATT&CK framework](https://attack.mitre.org/). This is a framework that lists a knowledge base of known adversary tactics and techniques. For your specific setup not all tactics will be applicable to you, such as T1201 (Password Policy Discovery). However, it is a good place to start
-### How to Create an Alert
+## How to Create an Alert
 The main point of an alert is to cause further action when a certain log or pattern of logs appear. In a traditional SOC this is where a playbook would run to automate the remediation process and or an analyst would jump in to investigate. For our purposes we will create an alert that appears on the alert page and prompts you to investigate. For our demonstrative purposes, we will create an alert for a failed linux authentication. 
 
 1. Click the three bars in the top left and go to Security > Alerts. ![[https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert1.png]]
@@ -219,4 +219,18 @@ The main point of an alert is to cause further action when a certain log or patt
 
 Congratulations, you now have a fully working SIEM with Elastic search! Before you go about doing anything else, below you'll find some basic hardening that you can do specific to elastic. If you are interested in more alerts I'll later be posting all of my alert queries, when done this will be updated with a link.
 
-## Hardening
+# Hardening
+Here we'll be going over some admittedly basic hardening steps to do for your SIEM.
+
+## Firewall
+Solely for accessing the SIEM you only need the following ports open:
+
+| Port Number | Service        |
+| ----------- | -------------- |
+| TCP/9200    | Elastic Search |
+| TCP/5601    | Kibana         |
+| TCP/8220    | Fleet          |
+You can drop all other traffic. However, if you access your server with ssh or have any other services that are running on the machine, make sure to add those to your firewall before dropping all other traffic and enabling the firewall.
+
+## Kibana
+Due to some reminiscence of us setting up our own certificate, we should make sure that all the files in `/etc/kibana` are only accessible to root:kibana. Run `ls -la /etc/kibana` and ensure that all files are owned by root with the kibana group and that there are no read permissions for you certificate files, especially your key.
