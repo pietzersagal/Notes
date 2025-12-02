@@ -202,18 +202,18 @@ xpack.security.encryptionKey: <YOUR-SECURITY-KEY>
 
 # Connecting an Agent
 ## Why Agent Over Beats
-There are two ways to send logs back to elastic search from a host machine. The first way that was integrated was via a beat. Beats were designed to be lightweight data shippers for a specific purpose such as just getting a heartbeat from the system or collecting specific files for their logs. Because of beats having a specific purpose it is not uncommon to install multiple beats on one host in order to cover all aspects. However, beats can be hard to manage because of there potentially being multiple beats per host to change. Later on elastic introduced agents which provide the same functionality as many beats in one binary and are more easily manageable. Agents are not an exact one to one with beats, but are far easier to use, deploy, and manage. In addition, elastic is pushing users to swap over to agents wherever applicable. Therefore, we will only be going over the installation of Agents in this guide. If you are still curious, you can take a look at the official elastic documentation [here](https://www.elastic.co/docs/reference/fleet/beats-agent-comparison)
+There are two ways to send logs back to elastic search from a host machine. The first way that was integrated was via a beat. Beats were designed to be lightweight data shippers for a specific purpose, such as just getting a heartbeat from the system or collecting specific log files. Because of the nature of beats it is not uncommon to install multiple beats on one host in order to collect all wanted information. However, beats can be hard to manage due to there being no easy way to update them and potentially dealing with multiple beats on one host. Later on elastic introduced agents which provide the same functionality as many beats in one binary and are more easily manageable. Agents are not an exact one to one with beats, but are far easier to use, deploy, and manage. In addition, elastic is pushing users to swap over to agents wherever applicable. Therefore, we will only be going over the installation of Agents in this guide. If you are still curious about the differences, you can take a look at the official elastic documentation [here](https://www.elastic.co/docs/reference/fleet/beats-agent-comparison)
 
 ## What are Integrations
-You may remember that we were prompted to setup an integration when we first logged into Kibana. This is because integrations actually manage the agents. So in reality Fleets manage the integrations which in turn manage the agents. Different integrations can control things such as the OS/architecture the agents is configured for or what sort of data is being collected. There are many different applications to go over with agents, but to keep it simple we will go over Linux and Windows.
+You may remember that we were prompted to setup an integration when we first logged into Kibana. This is because integrations actually manage the agents. So in reality Fleets manage the integrations which in turn manage the agents. Different integrations can set out to collect different information or depoly differently configured agents to hosts. There are many different applications to go over with agents, but to keep it simple we will go over Linux and Windows.
 
 ## Connecting a Linux Agent
-As a bit of a preface there are many different configurations of Linux, you may have to change some things that I do in order to fit your specific linux installation. To add some additional context the host I am connecting is an Ubuntu server with x86_64 architecture. Additionally, **any commands executed from the terminal are on the host we want to send logs from.** The commands are **NOT** executed on the host of the SIEM. There shouldn't be anything wrong with deploying agents on the SIEM host (You actually have already when you setup the fleet), but this guide aims to connect external computers to your SIEM.
+As a bit of a preface, there are many different configurations of Linux, you may have to change some things that I do in order to fit your specific Linux installation. To add some additional context the host I am connecting is an Ubuntu server with x86_64 architecture. Additionally, **the commands you see executed are on the host that we want to collect logs from**. The commands are **NOT** executed on the host of the SIEM. There shouldn't be anything wrong with deploying agents on the SIEM host (You actually have already done this when you setup the fleet), but this guide aims to connect external computers to your SIEM.
 
-1. From the homepage click on the three bars in the top left then click on Management -> Integrations.![Linux_Agent1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent1.png)
+1. From the homepage click on the three bars in the top left then click on Management > Integrations.![Linux_Agent1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent1.png)
 2. In the search bar type "system", then click on the System integration. ![Linux_Agent2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent2.png)
 3. In the top right click "Add System".![Linux_Agent3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent3.png)
-4. You will then be brought to a page to configure your integration. To keep things simple we will keep things on their default, but feel free to change the defaults to meet your needs. For example for a Mac you might need to add additional rows to the "Collect logs from System Instances".![Linux_Agent4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent4.png)
+4. You will then be brought to a page to configure your integration. To keep things simple we will keep we will use the default configurations, but feel free to change the configurations to meet your needs. For example for a Mac you might need to add additional rows to the "Collect logs from System Instances" section.![Linux_Agent4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent4.png)
 5. In step 2, select "New hosts" and feel free to change the "New agent policy name". When done click "Save and continue" in the bottom right.![Linux_Agent5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent5.png)
 6. You'll get a popup stating the system integration was added, now click "Add Elastic Agent to your hosts"![Linux_Agent6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent6.png)
 7. You'll be brought back to your system integration overview, click on the "Add agent" button for your newly created integration policy. ![Linux_Agent7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent7.png)
@@ -225,9 +225,9 @@ As a bit of a preface there are many different configurations of Linux, you may 
 12. You can now observe that you are receiving logs from the host via your agent. Congratulations! ![Linux_Agent10.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent10.png)
 ## Connecting a Windows Agent
 
-This will be very similar to connecting a Linux agent. As a matter of fact we are changing very little. However, I wanted to make this a different section to show you the slight differences. As before the commands entered here are done on a windows host and **NOT** our SIEM host.
+This will be very similar to connecting a Linux agent. As before the commands entered here are done on a windows host and **NOT** our SIEM host.
 
-1. From the home page, click on the three bars in the top left and select Management -> Integrations.![Windows1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows1.png)
+1. From the home page, click on the three bars in the top left and select Management > Integrations.![Windows1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows1.png)
 2. On the integrations page, type in "Windows" into the search bar and select the Windows Integration.![Windows2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows2.png)
 3. On the windows integration page, click Add Windows![Windows3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows3.png)
 4. Give your integration a meaningful name and description. Then go into "Collect events from the following Windows event log channels:", then modify this to as you see fit. The more boxes you check the more logs your SIEM will have to process. However it is highly recommended that you install Sysmon on your host and check the "Sysmon Operational" box. Personally I also like to check the "Preserve original event" for the Sysmon logs as well. You can find the Sysmon download [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) and I recommend to start out with one of the community Sysmon config files such as the one from SwiftOnSecurity found [here](https://github.com/SwiftOnSecurity/sysmon-config?tab=readme-ov-file).![Windows4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows4.png)![Windows5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows5.png)
@@ -236,20 +236,28 @@ This will be very similar to connecting a Linux agent. As a matter of fact we ar
 7. You'll now be back on the Windows integration page, click on "Add agent" for your newly created integration.![Windows8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows8.png)
 8. Skip over step one and in step two select your OS and architecture/preferred way of installation. For me is is "Windows MSI".![Windows9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows9.png)
 9. Now, open PowerShell **as administrator**. And paste the text provided to you by elastic in your PowerShell terminal. After you run the code, you'll see something similar to the following in the terminal awaiting you to press enter
+
    `> .\elastic-agent-9.2.1-windows-x86_64.msi --% INSTALLARGS="--url=https://172.16.0.13:8220 --enrollment-token=RG9uJ3QgdXNlIG15IGVucm9sbG1lbnQga2V5LCBnbyBnZXQgeW91ciBvd24hID46KA=="`
-   Since we are in charge of our own certificates we will have to append `--insecure` to the INSTALLARGS variable. So you should change your command to look something like the following: `> .\elastic-agent-9.2.1-windows-x86_64.msi --% INSTALLARGS="--url=https://172.16.0.13:8220 --enrollment-token=RG9uJ3QgdXNlIG15IGVucm9sbG1lbnQga2V5LCBnbyBnZXQgeW91ciBvd24hID46KA== --insecure"`
-10. Next just follow the provided installation wizard. ![Windows10.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows10.png)
+   
+   Since we are in charge of our own certificates we will have to append `--insecure` to the INSTALLARGS variable. So you should change your command to look something like the following:
+
+   `> .\elastic-agent-9.2.1-windows-x86_64.msi --% INSTALLARGS="--url=https://172.16.0.13:8220 --enrollment-token=RG9uJ3QgdXNlIG15IGVucm9sbG1lbnQga2V5LCBnbyBnZXQgeW91ciBvd24hID46KA== --insecure"`
+   
+10. Next just follow the provided installation wizard. 
+
+![Windows10.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows10.png)
+
 11. After this you'll get confirmation back in your browser window that your windows host is now sending logs to elastic.![Windows11.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows11.png)
 12. Now click on the three bars in the top left and go to Analytics > Discover.![Windows12.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows12.png)
-13. You'll now be able to confirm that your windows host is sending logs to your SIEM. Congratulations. ![Windows13.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows13.png)
+13. You'll now be able to confirm that your windows host is sending logs to your SIEM. Congratulations! ![Windows13.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows13.png)
 
 # Configuring Alerts
 ## What to Create Alerts On
-The primary purpose of your SIEM should be to keep an eye on all of your machines. However, it is not reasonable to search for IOC on **every** host that you connect. So you should create alerts to notify you when something should be investigated. This can be a hard thing to do and there are many ways to go about it. One thing is true regardless, your alerting rules will continue to grow and change over time. In my personal opinion, the best place to start is with the [MITRE ATT&CK framework](https://attack.mitre.org/). This is a framework that lists a knowledge base of known adversary tactics and techniques. For your specific setup not all tactics will be applicable to you, such as T1201 (Password Policy Discovery). However, it is a good place to start
+The primary purpose of your SIEM should be to keep an eye on all of your machines. However, it is not reasonable to search for IOCs on **every** host that you connect. So you should create alerts to notify you when something should be investigated. This can be a hard thing to do and there are many ways to go about it. One thing is true regardless, your alerting rules will continue to grow and change over time. In my personal opinion, the best place to start is with the [MITRE ATT&CK framework](https://attack.mitre.org/). This is a framework that lists a knowledge base of known adversary tactics and techniques. For your specific setup, not all tactics will be applicable to you, such as T1201 (Password Policy Discovery). However, it is a good place to start
 ## How to Create an Alert
 The main point of an alert is to cause further action when a certain log or pattern of logs appear. In a traditional SOC this is where a playbook would run to automate the remediation process and or an analyst would jump in to investigate. For our purposes we will create an alert that appears on the alert page and prompts you to investigate. For our demonstrative purposes, we will create an alert for a failed linux authentication. 
 
-1. Click the three bars in the top left and go to Security > Alerts. ![Alert1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert1.png)
+1. On the home page click the three bars in the top left and go to Security > Alerts. ![Alert1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert1.png)
 2. On the Alerts page, click on the "Manage Rules" button in the top right.![Alert2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert2.png)
 3. On the Rule page click on the "Create rule" button in the top left. ![Alert3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert3.png)
 4. **NOTE:** *At this point depending on what you want to alert on your actions may differ.* In the "Select rule type" window, type "Elasticsearch query", then click the Elasticsearch box.![Alert4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert4.png)
@@ -267,7 +275,7 @@ The main point of an alert is to cause further action when a certain log or patt
    You should see the alert pop up which is verifying that the SIEM is on the lookout for you. ![Alert9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert9.png)
 10. Now you can click and investigate the alert and take whatever action you deem necessary. NOTE: For our instance, once you click on the alert details the status will switch to resolved. You may not want this for your specific installation.
 
-Congratulations, you now have a fully working SIEM with Elastic search! Before you go about doing anything else, below you'll find some basic hardening that you can do specific to elastic. If you are interested in more alerts I'll later be posting all of my alert queries, when done this will be updated with a link.
+Congratulations, you now have a fully working SIEM with Elastic search! Before you go about doing anything else, below you'll find some basic hardening that you can do specific to elastic. If you are interested in more alerts I'll later be posting all of my alert queries. I'll later update this with a link.
 
 # Hardening
 Here we'll be going over some admittedly basic hardening steps to do for your SIEM.
@@ -284,4 +292,10 @@ Solely for accessing the SIEM you only need the following ports open:
 You can drop all other traffic. However, if you access your server with ssh or have any other services that are running on the machine, make sure to add those to your firewall before dropping all other traffic and enabling the firewall.
 
 ## Kibana Hardening
-Due to some reminiscence of us setting up our own certificate, we should make sure that all the files in `/etc/kibana` are only accessible to root:kibana. Run `ls -la /etc/kibana` and ensure that all files are owned by root with the kibana group and that there are no read permissions for you certificate files, especially your key.
+Due to some left over permissions of us setting up our own certificate, we should make sure that all the files in `/etc/kibana` are only accessible to root:kibana. Run `ls -la /etc/kibana` and ensure that all files are owned by root with the kibana group and that there are no read permissions for you certificate files, especially your key. You can change owner and group permissions with 
+
+`$ sudo chown root:kibana /etc/kibana/<filename-here>`
+
+You can set the correct permissions for any file with the following command:
+
+`$ sudo chmod 660 /etc/kibana/<filename-here>`
