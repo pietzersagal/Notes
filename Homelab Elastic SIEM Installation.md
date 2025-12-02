@@ -4,134 +4,182 @@ This is to serve is a guide for setting up an Elastic SIEM for homelab on your o
 **Note:** My configuration takes place on one virtual machine with 8 GB of Ram and a 1000 GB hard drive (though you can likely get away with a lot less). This installation takes place on an Ubuntu 24.04 Server with a statically assigned IP address.
 
 This guide will be broken up into the following parts:
-1. Elastic Search Installation
-	1. Elastic Search's Role
-	2. Installation
-	3. Verification
-2. Kibana Installation
-	1. Kibana's Role
-	2. Installation
-	3. Enable HTTPS
-	4. Fleet setup
-3. Connecting an Agent
-	1. Why Agent over Beats
-	2. What are Integrations
-	3. Connecting a Linux Agent
-	4. Connecting a Windows Agent
-4. Configuring alerts
-	1. What to Create Alerts On
-	2. How to Create an Alert
-5. Hardening
-	1. Configure Firewall
-	2. Set important file permissions
+1. [Elastic Search Installation](#elastic-search-installation)
+	1. [Elastic Search's Role](#elastic-searchs-role)
+	2. [Elastic Search Installation Steps](#elastic-search-installation-steps)
+	3. [Verification](#verification)
+2. [Kibana Installation](#kibana-installation)
+	1. [Kibana's Role](#kibanas-role)
+	2. [Kibana Installation Steps](#kibana-installation-steps)
+	3. [Enable HTTPS](#enable-https)
+	4. [Fleet Setup](#fleet-setup)
+3. [Connecting an Agent](#connecting-an-agent)
+	1. [Why Agent Over Beats](#why-agent-over-beats)
+	2. [What are Integrations](#what-are-integrations)
+	3. [Connecting a Linux Agent](#connecting-a-linux-agent)
+	4. [Connecting a Windows Agent](#connecting-a-windows-agent)
+4. [Configuring Alerts](#configuring-alerts)
+	1. [What to Create Alerts On](#configuring-alerts)
+	2. [How to Create an Alert](#how-to-create-an-alert)
+5. [Hardening](#hardening)
+	1. [Configuring the Firewall](#configuring-the-firewall)
+	2. [Kibana Hardening](#kibana-hardening)
 
 # Elastic Search Installation
 ## Elastic Search's Role
 While I think it is important to know the role of each part of your SIEM, if you want to move forward with the installation then jump to the Installation step. 
 
-Elastic search is described as "an open source, distributed search and analytics engine built for speed, scale, and AI applications". Which to put more simply, it is a platform to store and search logs with some programmatic features baked in. Elastic offers many different versions of the software running on different code languages, however the most common and the one we will be using is Java with a bundled in JDK. By default TLS encryption is enabled on the basic install of ES. To send logs to ES port 9200 will be opened on the host. To actually view these logs we will be using Elastic's Kibana, which we will go into in its respective section.
+Elastic search is described as "an open source, distributed search and analytics engine built for speed, scale, and AI applications". Which to put more simply, it is a platform to store and search logs with some programmatic features baked in. Elastic offers many different versions of the software running on different code languages, however the most common and the one we will be using is Java with a bundled in JDK. By default TLS encryption is enabled on the basic install of ES. To send logs to ES port 9200 will be opened on the host, however you can find more about firewall configurations in the [Configuring the Firewall](#configuring-the-firewall) portion of this guide. To actually view these logs we will be using Elastic's Kibana, which we will go into in its respective section.
 
-## Installation
+## Elastic Search Installation Steps
 Luckily the installation of Elastic Search is pretty straight forward to the official installation guide provided by elastic which can be found [here](https://www.elastic.co/docs/deploy-manage/deploy/self-managed/installing-elasticsearch). We will primarily following this word for word.
 
-1. Import Elasticsearch PGP key:
+1. Import the Elasticsearch PGP key:
+   
    `$ wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg`
 2. Install apt transport https
+   
    `$ sudo apt-get install apt-transport-https`
-3. Save repository definition
+3. Save the repository definition
+   
    `$ echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/9.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-9.x.list`
-4. Next, update and install
+4. Update and install
+   
    `$ sudo apt-get update && sudo apt-get install elasticsearch`
 5. Observe the output of installing elastic search: ![Elastic_Installation_Output.png](/Images/Elastic_SIEM/Elastic_Installation_Output.png)
-   Here we can see in the output a password is generated for our build in user, "NH7AQphIpvhxcEL-ZE6n". On your installation please keep note of this password. If you have lost this password then you will have to generate a new one with `/usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic` or as your output directs you to. 
+   Here we can see in the output a password is generated for our build in user, `NH7AQphIpvhxcEL-ZE6n`. On your installation please keep note of this password. If you have lost this password then you will have to generate a new one with 
+   
+   `$ sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic` or as your output directs you to. 
 6. Now obtain your IP address then open `/etc/elasticsearch/elasticsearch.yml` in your text editor of choice. Uncomment the line
+   
    `#network.host: 192.168.0.1`
-   And change this to
+   And change this to:
+   
    `network.host: <YOUR-IP>`
-   This will enable elastic search to listen on all interfaces. Also uncomment the line 
+   This will enable elastic search to listen on all interfaces. In addition add the following line below your newly created one:
+   
    `#transport.host: <YOUR-IP>`. 
 7. Next enable systemd journal logging for the elasticsearch service by navigating to your elasticsearch.service file. In my case it is located at `/usr/lib/systemd/system/elasticsearch.service`
    Find the line
+   
    `ExecStart=/usr/share/elasticsearch/bin/systemd-entrypoint -p ${PID_DIR}/elasticsearch.pid --quiet`
+
    and remove the `--quiet` part from it
+
    `ExecStart=/usr/share/elasticsearch/bin/systemd-entrypoint -p ${PID_DIR}/elasticsearch.pid`
-8. Finally, daemon-reload, enable and start the service
-   `$ sudo systemctl daemon-reload`
-   `$ sudo systemctl enable elasticsearch.service`
-   `$ sudo systemctl start elasticsearch.service`
+9. Finally, daemon-reload, enable and start the service
+   
+   ```
+   $ sudo systemctl daemon-reload
+   $ sudo systemctl enable elasticsearch.service
+   $ sudo systemctl start elasticsearch.service
+   ```
 ## Verification
 Luckily verification that the service is running is quite easy.
+
 `$ systemctl status elasticsearch.service`
+
 This command should display that the service is active and enabled as shown here: ![Elastic_Running.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Running.png)
-Afterwards you can verify that the service is able to receive information by querying it. For the following command please replace the elastic password with the one you had stored in step 5.
+Afterwards you can verify that the service is able to receive information by querying it. For the following command please replace the elastic password with the one you had stored in step 5 of [Elastic Search Installation Steps](#elastic-search-installation-steps).
+
 `$ sudo curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic:<ELASTIC-PASSWORD> https://localhost:9200`
+
 You should receive a response like the following:![Elastic_Verification.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Verification.png)
 
-Congratulations, once reaching this step you have successfully installed elastic search
+Congratulations, once you have successfully installed elastic search!
 
-# Kibana
+# Kibana Installation
 ## Kibana's Role
 Kibana will be the primary way you are able to interact with your SIEM. 
 
 Kibana is a web server that you host in order to view logs, setup fleets, create dashboards, and about everything else that you might want to do with your SIEM. 
 
-## Installation
+## Kibana Installation Steps
 1. Install the Kibana package: 
+   
    `$ sudo apt-get install kibana`
 2. Make the host externally accessible, modifying `/etc/kibana/kibana.yml` and changing the line
-   `#server.host: "localhost"`
-   to
-   `server.host: <YOUR-IP>`
-3. Now setup and start Kibana with systemd
-   `$ sudo systemctl daemon-reload`
-   `$ sudo systemctl enable kibana`
-   `$ sudo systemctl start kibana`
-4. Next enroll Kibana, obtain the verification code via the command:
+
+   `#server.host: "localhost"` to `server.host: <YOUR-IP>`
+4. Now setup and start Kibana with systemd
+
+   ```
+   $ sudo systemctl daemon-reload
+   $ sudo systemctl enable kibana
+   $ sudo systemctl start kibana
+   ```
+6. Next enroll Kibana, obtain the verification code via the command:
+
    `$ systemctl status kibana`
+
    That will show an output like so: ![Kibana_Verification.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Verification.png)
-   At the bottom we will see text like `Go to http://172.16.0.13:5601/?code=892613 to get started.` Visit the URL provided in your web browser to enable your Kibana instance. Next you will see a page prompting you for an enrollment token:![Kibana_Enrollment.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Enrollment.png)
+   At the bottom we will see text like the following:
+
+   `Go to http://172.16.0.13:5601/?code=892613 to get started.`
+
+   Visit the URL provided in your web browser to enable your Kibana instance. Next, you will see a page prompting you for an enrollment token:
+
+   ![Kibana_Enrollment.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Enrollment.png)
+
    Generate an enrollment token with the following command
+
    `$ sudo /usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana`
+
    Copy the output of that command and paste it into the Enrollment token window on your browser, then click "Configure Elastic". Please give Kibana a moment until you are able to see the following login page: ![Kibana_Login.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Login.png)
 
 Now you can login with the username elastic and your password generated from the elastic installation earlier. If you have lost this password a new one can be generated with the command: 
+   
    `$ sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic`
-   However there are some additional configurations that you should be doing. These are detailed in the next Section
+   
+   However there are some additional configurations that you should be doing. These are detailed in the following sections.
 
 ## Enable HTTPS
-You are using a password to sign in meaning that it shouldn't be seen in plain text across the network. 
+You are using a password to sign in meaning that it shouldn't be seen in plain text across the network. We'll generate a certificate and implement it to setup HTTPS so that we have no more plaintext traffic used for our password.
 1. First generate a certificate using elastic search
+   
    `$ sudo /usr/share/elasticsearch/bin/elasticsearch-certutil csr --name kibana-server --out /etc/kibana/kibana-server.zip`
+   
 2. Next unzip the contents
+   
    `$ sudo unzip /etc/kibana/kibana-server.zip -d /etc/kibana`
+   
 3. Move the contents to the main folder
-   `$ sudo mv /etc/kibana/kibana-server/kibana-server.key /etc/kibana` 
-   `$ sudo mv /etc/kibana/kibana-server/kibana-server.csr /etc/kibana`
+   ```
+   $ sudo mv /etc/kibana/kibana-server/kibana-server.key /etc/kibana 
+   $ sudo mv /etc/kibana/kibana-server/kibana-server.csr /etc/kibana
+   ```
+   
 4. Create the crt file with openssl
-   `$ sudo openssl req -in /etc/kibana/kibana-server.csr -out /etc/kibana/kibana-server.pem`
-   `$ sudo openssl x509 -req -in /etc/kibana/kibana-server.pem -signkey /etc/kibana/kibana-server.key -out /etc/kibana/kibana-server.crt`
-5. Next edit the /etc/kibana/kibana.yml file. Change the lines
+   ```
+   $ sudo openssl req -in /etc/kibana/kibana-server.csr -out /etc/kibana/kibana-server.pem
+   $ sudo openssl x509 -req -in /etc/kibana/kibana-server.pem -signkey /etc/kibana/kibana-server.key -out /etc/kibana/kibana-server.crt
+   ```
+5. Next edit the `/etc/kibana/kibana.yml` file and change the lines
    ```
    #server.ssl.enabled: false
    #server.ssl.certificate: /path/to/your/server.crt
    #server.ssl.key: /path/to/your/server.key
    ```
-To these lines
-```
-server.ssl.enabled: true
-server.ssl.certificate: /etc/kibana/kibana-server.crt
-server.ssl.key: /etc/kibana/kibana-server.key
-```
+   To these lines.
+   ```
+   server.ssl.enabled: true
+   server.ssl.certificate: /etc/kibana/kibana-server.crt
+   server.ssl.key: /etc/kibana/kibana-server.key
+   ```
 6. Finally restart Kibana
+
    `$ sudo systemctl restart kibana`
-You should now observe that you can only access Kibana via https now and that you will get a warning about your certificate when visiting the webpage. To fix this you would need to setup your own certificate authority which unfortunately is outside the scope of this guide and to be frank not needed for a small scale home lab.
-## Fleet setup
-A fleet is used to centrally mange your Kibana integrations. Integrations allow you to create agents to monitor specific logs and be quickly updated via your fleet. But first you need to setup your fleet via Kibana.
+   
+You should now observe that you can only access Kibana via https now and that you will get a warning about your certificate when visiting the webpage for the first time. To fix this you would need to setup your own certificate authority which unfortunately is outside the scope of this guide and to be frank not needed for a small scale home lab.
+## Fleet Setup
+A fleet is used to centrally mange your Kibana integrations. Integrations allow you to create agents to monitor specific logs on hosts. However, you first need to setup your fleet via Kibana.
 
 1. First we need to generate some encryption keys for Kibana saved objects, this will allow us to setup Fleets. Run the following command to generate your encryption keys. 
+   
    `$ sudo /usr/share/kibana/bin/kibana-encryption-keys generate`
+   
 2. You will get an output similar to the following. Note down and copy the values at the bottom. ![Kibana_Generate_Keys.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Generate_Keys.png)
-3. Using a file editor of your choice append the following into the bottom of /etc/kibana.yml, substituting in your keys.
+3. Using a file editor of your choice append the following into the bottom of `/etc/kibana.yml`, substituting in your keys.
 ```
 # This section was added after running "/usr/share/kibana/bin/kibana-encryption-keys generate"
 
@@ -140,18 +188,20 @@ xpack.reporting.encryptionKey: <YOUR-REPORTING-KEY>
 xpack.security.encryptionKey: <YOUR-SECURITY-KEY>
 ```
 4. Now restart Kibana to apply the configurations.
+
    `$ sudo systemctl restart kibana`
-5. Sign into Kibana, and when prompted to add integrations select "Explore on my own".![Fleet1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet1.png)
-6. Next click the three bars in the top left and in the drop down go to Management > Fleet.![Fleet2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet2.png)
-7. Now click the button in the middle of the screen for Add Fleet Server. ![Fleet3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet3.png)
-8. Now Follow the quick start guide, for our purpose we'll be using the Name "Fleet", the URL https://YOUR-IP:8220 and checking the switch to make this fleet server the default one. You may want to modify those as you see fit. ![Fleet4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet4.png)
-9. Step 2 of the quick start will provide you with the commands you need to paste into your SIEM host to setup the Fleet on that server. Select your OS and architecture then paste those in to your terminal.![Fleet5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet5.png)
-10. After the successful running of those commands you will see the following output in the terminal: `Elastic Agent has been successfully installed.`
-11. Jump back over to your browser and select the button "Continue enrolling Elastic Agent" in the third step.![Fleet6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet6.png)
-12. After this you will be prompted to create an agent since this will dependent on what sort of logs you want to collect click the 'X' for now. Then you should see a page like the following showing that you have your Fleet successfully setup! ![Fleet7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet7.png)
+   
+6. Sign into Kibana, and when prompted to add integrations select "Explore on my own".![Fleet1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet1.png)
+7. Next click the three bars in the top left and in the drop down go to Management > Fleet.![Fleet2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet2.png)
+8. Now click the button in the middle of the screen for Add Fleet Server. ![Fleet3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet3.png)
+9. Now Follow the quick start guide, for our purpose we'll be using the Name "Fleet", the URL https://YOUR-IP:8220 (using your SIEM's IP address) and checking the switch to make this fleet server the default one. You may want to modify these as you see fit. ![Fleet4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet4.png)
+10. Step 2 of the quick start will provide you with the commands you need to paste into your SIEM host to setup the Fleet on that server. Select your OS and architecture then paste those in to your terminal.![Fleet5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet5.png)
+11. After the successful running of those commands you will see the following output in the terminal: `Elastic Agent has been successfully installed.`
+12. Jump back over to your browser and select the button "Continue enrolling Elastic Agent" in the third step.![Fleet6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet6.png)
+13. After this you will be prompted to create an agent, click the 'X' for now. Then you should see a page like the following showing that you have your Fleet successfully setup! ![Fleet7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet7.png)
 
 # Connecting an Agent
-## Why Agent over Beats
+## Why Agent Over Beats
 There are two ways to send logs back to elastic search from a host machine. The first way that was integrated was via a beat. Beats were designed to be lightweight data shippers for a specific purpose such as just getting a heartbeat from the system or collecting specific files for their logs. Because of beats having a specific purpose it is not uncommon to install multiple beats on one host in order to cover all aspects. However, beats can be hard to manage because of there potentially being multiple beats per host to change. Later on elastic introduced agents which provide the same functionality as many beats in one binary and are more easily manageable. Agents are not an exact one to one with beats, but are far easier to use, deploy, and manage. In addition, elastic is pushing users to swap over to agents wherever applicable. Therefore, we will only be going over the installation of Agents in this guide. If you are still curious, you can take a look at the official elastic documentation [here](https://www.elastic.co/docs/reference/fleet/beats-agent-comparison)
 
 ## What are Integrations
@@ -193,7 +243,7 @@ This will be very similar to connecting a Linux agent. As a matter of fact we ar
 12. Now click on the three bars in the top left and go to Analytics > Discover.![Windows12.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows12.png)
 13. You'll now be able to confirm that your windows host is sending logs to your SIEM. Congratulations. ![Windows13.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows13.png)
 
-# Configuring alerts
+# Configuring Alerts
 ## What to Create Alerts On
 The primary purpose of your SIEM should be to keep an eye on all of your machines. However, it is not reasonable to search for IOC on **every** host that you connect. So you should create alerts to notify you when something should be investigated. This can be a hard thing to do and there are many ways to go about it. One thing is true regardless, your alerting rules will continue to grow and change over time. In my personal opinion, the best place to start is with the [MITRE ATT&CK framework](https://attack.mitre.org/). This is a framework that lists a knowledge base of known adversary tactics and techniques. For your specific setup not all tactics will be applicable to you, such as T1201 (Password Policy Discovery). However, it is a good place to start
 ## How to Create an Alert
@@ -222,7 +272,7 @@ Congratulations, you now have a fully working SIEM with Elastic search! Before y
 # Hardening
 Here we'll be going over some admittedly basic hardening steps to do for your SIEM.
 
-## Firewall
+## Configuring the Firewall
 Solely for accessing the SIEM you only need the following ports open:
 
 | Port Number | Service        |
@@ -233,5 +283,5 @@ Solely for accessing the SIEM you only need the following ports open:
 
 You can drop all other traffic. However, if you access your server with ssh or have any other services that are running on the machine, make sure to add those to your firewall before dropping all other traffic and enabling the firewall.
 
-## Kibana
+## Kibana Hardening
 Due to some reminiscence of us setting up our own certificate, we should make sure that all the files in `/etc/kibana` are only accessible to root:kibana. Run `ls -la /etc/kibana` and ensure that all files are owned by root with the kibana group and that there are no read permissions for you certificate files, especially your key.
