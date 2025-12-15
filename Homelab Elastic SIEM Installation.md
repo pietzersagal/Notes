@@ -1,7 +1,7 @@
 # Document Intent
 This is to serve is a guide for setting up an Elastic SIEM for homelab on your own hardware. This guide is designed for your SIEM to not be public facing, but to still expect others on your network. We will be following and referencing the official elastic documentation throughout this guide, but this guide will be more step by step than elastic's documentation with the addition of recommended configurations throughout. Your resources will likely differ from mine, so feel free to also follow along with Elastic's documentation for edge cases. 
 
-**Note:** My configuration takes place on one virtual machine with 8 GB of Ram and a 1000 GB hard drive (though you can likely get away with a lot less). This installation takes place on an Ubuntu 24.04 Server with a statically assigned IP address.
+**Note:** My configuration takes place on one virtual machine with 12 GB of Ram and a 1000 GB hard drive (though you can likely get away with a lot less). This installation takes place on an Ubuntu 24.04 Server with a statically assigned IP address.
 
 This guide will be broken up into the following parts:
 1. [Elastic Search Installation](#elastic-search-installation)
@@ -16,8 +16,6 @@ This guide will be broken up into the following parts:
 3. [Connecting an Agent](#connecting-an-agent)
 	1. [Why Agent Over Beats](#why-agent-over-beats)
 	2. [What are Integrations](#what-are-integrations)
-	3. [Connecting a Linux Agent](#connecting-a-linux-agent)
-	4. [Connecting a Windows Agent](#connecting-a-windows-agent)
 4. [Configuring Alerts](#configuring-alerts)
 	1. [What to Create Alerts On](#configuring-alerts)
 	2. [How to Create an Alert](#how-to-create-an-alert)
@@ -79,12 +77,12 @@ Luckily verification that the service is running is quite easy.
 
 `$ systemctl status elasticsearch.service`
 
-This command should display that the service is active and enabled as shown here: ![Elastic_Running.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Running.png)
+This command should display that the service is active and enabled as shown here: ![Elastic_Running](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Running)
 Afterwards you can verify that the service is able to receive information by querying it. For the following command please replace the elastic password with the one you had stored in step 5 of [Elastic Search Installation Steps](#elastic-search-installation-steps).
 
 `$ sudo curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic:<ELASTIC-PASSWORD> https://localhost:9200`
 
-You should receive a response like the following:![Elastic_Verification.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Verification.png)
+You should receive a response like the following:![Elastic_Verification](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Verification)
 
 Congratulations, once you have successfully installed elastic search!
 
@@ -112,20 +110,20 @@ Kibana is a web server that you host in order to view logs, setup fleets, create
 
    `$ systemctl status kibana`
 
-   That will show an output like so: ![Kibana_Verification.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Verification.png)
+   That will show an output like so: ![Kibana_Verification](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Verification)
    At the bottom we will see text like the following:
 
    `Go to http://172.16.0.13:5601/?code=892613 to get started.`
 
    Visit the URL provided in your web browser to enable your Kibana instance. Next, you will see a page prompting you for an enrollment token:
 
-   ![Kibana_Enrollment.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Enrollment.png)
+   ![Kibana_Enrollment](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Enrollment)
 
    Generate an enrollment token with the following command
 
    `$ sudo /usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana`
 
-   Copy the output of that command and paste it into the Enrollment token window on your browser, then click "Configure Elastic". Please give Kibana a moment until you are able to see the following login page: ![Kibana_Login.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Login.png)
+   Copy the output of that command and paste it into the Enrollment token window on your browser, then click "Configure Elastic". Please give Kibana a moment until you are able to see the following login page: ![Kibana_Login](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Login.png)
 
 Now you can login with the username elastic and your password generated from the elastic installation earlier. If you have lost this password a new one can be generated with the command: 
    
@@ -205,51 +203,47 @@ xpack.security.encryptionKey: <YOUR-SECURITY-KEY>
 There are two ways to send logs back to elastic search from a host machine. The first way that was integrated was via a beat. Beats were designed to be lightweight data shippers for a specific purpose, such as just getting a heartbeat from the system or collecting specific log files. Because of the nature of beats it is not uncommon to install multiple beats on one host in order to collect all wanted information. However, beats can be hard to manage due to there being no easy way to update them and potentially dealing with multiple beats on one host. Later on elastic introduced agents which provide the same functionality as many beats in one binary and are more easily manageable. Agents are not an exact one to one with beats, but are far easier to use, deploy, and manage. In addition, elastic is pushing users to swap over to agents wherever applicable. Therefore, we will only be going over the installation of Agents in this guide. If you are still curious about the differences, you can take a look at the official elastic documentation [here](https://www.elastic.co/docs/reference/fleet/beats-agent-comparison)
 
 ## What are Integrations
-You may remember that we were prompted to setup an integration when we first logged into Kibana. This is because integrations actually manage the agents. So in reality Fleets manage the integrations which in turn manage the agents. Different integrations can set out to collect different information or depoly differently configured agents to hosts. There are many different applications to go over with agents, but to keep it simple we will go over Linux and Windows.
+You may remember that we were prompted to setup an integration when we first logged into Kibana. To understand what an integration is we first need to know about Policies. Policies are used to create agents that collecting system logs or information under specific rules. As one host cannot have multiple agents sometimes the use of differently policies for different use cases is needed. For each policy you can setup many different integrations, which are the things that dictate what information the agents should be collecting. If an agent is created by a policy with one or more incompatible integrations (ex. Linux host has an agent with windows integrations) then the incompatible integration(s) will be ignored and only applicable information will be collected.
 
-## Connecting a Linux Agent
-As a bit of a preface, there are many different configurations of Linux, you may have to change some things that I do in order to fit your specific Linux installation. To add some additional context the host I am connecting is an Ubuntu server with x86_64 architecture. Additionally, **the commands you see executed are on the host that we want to collect logs from**. The commands are **NOT** executed on the host of the SIEM. There shouldn't be anything wrong with deploying agents on the SIEM host (You actually have already done this when you setup the fleet), but this guide aims to connect external computers to your SIEM.
+**TLDR**
 
-1. From the homepage click on the three bars in the top left then click on Management > Integrations.![Linux_Agent1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent1.png)
-2. In the search bar type "system", then click on the System integration. ![Linux_Agent2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent2.png)
-3. In the top right click "Add System".![Linux_Agent3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent3.png)
-4. You will then be brought to a page to configure your integration. To keep things simple we will keep we will use the default configurations, but feel free to change the configurations to meet your needs. For example for a Mac you might need to add additional rows to the "Collect logs from System Instances" section.![Linux_Agent4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent4.png)
-5. In step 2, select "New hosts" and feel free to change the "New agent policy name". When done click "Save and continue" in the bottom right.![Linux_Agent5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent5.png)
-6. You'll get a popup stating the system integration was added, now click "Add Elastic Agent to your hosts"![Linux_Agent6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent6.png)
-7. You'll be brought back to your system integration overview, click on the "Add agent" button for your newly created integration policy. ![Linux_Agent7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent7.png)
-8. You'll have a side bar open up for adding an agent. For step one you can use the default enrollment token. For step two select the correct OS and architecture from the tabs and then copy the commands provided to you. Don't paste them just yet, since we are operating within a home lab we will get some errors about our certificates since they are not registered with a proper CA. We will have to modify them.![Linux_Agent8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent8.png)
-9. You can safely enter in the first three lines that curl a tar file, uncompress it, then change into the directory. 
-10. However in the final line we need to append `--insecure` since we have not setup our certificates with a CA. So your final command entered should look something like the following:
-    `$sudo ./elastic-agent install --url=https://172.16.0.13:8220 --enrollment-token=WW91J3JlIGEgbm9zZXkgYmFzdGFyZCBhcmVuJ3QgeWE= --insecure`
-11. After that you will get confirmation that your agent has been enrolled and you will be prompted to click "View assets". Instead click the three bars in the top left and click Analytics > Discover. ![Linux_Agent9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent9.png)
-12. You can now observe that you are receiving logs from the host via your agent. Congratulations! ![Linux_Agent10.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Linux_Agent10.png)
-## Connecting a Windows Agent
+*Policy*: Creates agents that collect information from the host under specific rules via one or more integrations.
 
-This will be very similar to connecting a Linux agent. As before the commands entered here are done on a windows host and **NOT** our SIEM host.
+*Agent*: A service on a host that sends logs back to Elasticsearch.
 
-1. From the home page, click on the three bars in the top left and select Management > Integrations.![Windows1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows1.png)
-2. On the integrations page, type in "Windows" into the search bar and select the Windows Integration.![Windows2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows2.png)
-3. On the windows integration page, click Add Windows![Windows3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows3.png)
-4. Give your integration a meaningful name and description. Then go into "Collect events from the following Windows event log channels:", then modify this to as you see fit. The more boxes you check the more logs your SIEM will have to process. However it is highly recommended that you install Sysmon on your host and check the "Sysmon Operational" box. Personally I also like to check the "Preserve original event" for the Sysmon logs as well. You can find the Sysmon download [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) and I recommend to start out with one of the community Sysmon config files such as the one from SwiftOnSecurity found [here](https://github.com/SwiftOnSecurity/sysmon-config?tab=readme-ov-file).![Windows4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows4.png)![Windows5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows5.png)
-5. Next give you new agent policy a name and click "Save and continue" in the bottom right.![Windows6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows6.png)
-6. Next on the window that has popped up click "Add Elastic Agent to your hosts"![Windows7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows7.png)
-7. You'll now be back on the Windows integration page, click on "Add agent" for your newly created integration.![Windows8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows8.png)
-8. Skip over step one and in step two select your OS and architecture/preferred way of installation. For me is is "Windows MSI".![Windows9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows9.png)
-9. Now, open PowerShell **as administrator**. And paste the text provided to you by elastic in your PowerShell terminal. After you run the code, you'll see something similar to the following in the terminal awaiting you to press enter
+*Integration*: A set of rules an agent will follow.
 
-   `> .\elastic-agent-9.2.1-windows-x86_64.msi --% INSTALLARGS="--url=https://172.16.0.13:8220 --enrollment-token=RG9uJ3QgdXNlIG15IGVucm9sbG1lbnQga2V5LCBnbyBnZXQgeW91ciBvd24hID46KA=="`
+## Creating a Security Policy
+Here we'll show how to create a policy to be used for collecting logs that we can alert on as well as provide features for hosts that you would want in a typical SOC.
+
+1. Go to Fleet page. From the main menu this can be accessed from the three bars in the top left and clicking on Management > Fleet.![[Images/Elastic Images/SP1.png]]
+2. Next click on the "Agent policies" tab from the Fleet page.![[SP2.png]]
+3. Next click on "Create agent policy".![[SP3.png]]
+4. Choose a meaningful name like "Security Policy" and click on "Create agent policy".![[SP4.png]]
+5. Now click on your newly created policy.![[SP5.png]]
+6. Click on "Add integration" in the middle of the page.![[SP6.png]]
+7. In the pop up menu search for and select "Elastic Defend", give you integration a meaningful name, optionally give your integration a description, and for your configuration settings you can leave the environment type as "Traditional Endpoints" and leave "Complete EDR" as the chosen setting. Then click "Add integration". ![[SP7.png]]  ![[SP8.png]]
+8. You'll now be back at your policy page, click on your newly created Elastic Defend integration (You'll also see a system integration that exists to collect logs from linux hosts).![[SP9.png]]
+9. In your integration settings, scroll down to "Protection level" and switch it to "Detect". You can experiment with this later, however when starting out you should leave this on detect as to not cause unintended issues. Then select "Save integration".![[SP10.png]]
+10. You'll now be brought back to your policy page, if you don't plan on using any windows agents then you can skip these next steps. If you do, then click on "Add integration" again.![[SP11.png]]
+11. Search for the integration "Windows" and give your integration a meaningful name and description. Then go into "Collect events from the following Windows event log channels:", then modify this to as you see fit. The more boxes you check the more logs your SIEM will have to process. However it is highly recommended that you install Sysmon on your host and check the "Sysmon Operational" box. Personally I also like to check the "Preserve original event" for the Sysmon logs as well. You can find the Sysmon download [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) and I recommend to start out with one of the community Sysmon config files such as the one from SwiftOnSecurity found [here](https://github.com/SwiftOnSecurity/sysmon-config?tab=readme-ov-file). Once, done click on "Add integration". ![[SP12.png]]  ![[SP13.png]]
+You'll now be back on the policy page with your policy setup. Now we can worry about adding agents from this policy to our hosts.
+
+## Adding agents
+With our newly setup policy, adding agents will be pretty straight forward. However, there are some slight differences when installing an agent on Windows or on Linux. They will be observed below.
+
+1. From you policy page you want to install an agent from click on "Add agent"![[Agents1.png]]
+2. This will bring up a drop down menu, we can skip over step one as we only have on enrollment token and leave the option "Enroll in Fleet" as is in step 2. In step 3, you are prompted to select your OS and architecture/installation method. Below, we'll go over the differences for Linux Vs. Windows.
+
+### Linux
+1. Select the architecture of your machine to retrieve the code you need to paste in to your host.![[Agents2.png]]
+2. Copy all but the last line of the provided commands and paste them into a Linux host that you want to collect logs from.![[Agents3.png]]
+3. Now grab the final line that would install the elastic agent. Append `--insecure` to the end of it. This is necessary as we are using our own TLS certificates without a CA. After appending insecure, run the command and follow the directions provided. Your command should look something like the following:
    
-   Since we are in charge of our own certificates we will have to append `--insecure` to the INSTALLARGS variable. So you should change your command to look something like the following:
+   `$ sudo ./elastic-agent install --url=https://<YOUR-SIEM-IP>:8220 --enrollment-token=RHVkZSwgZ28gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRlIHRva2VuISA+Oig= -- insecure`
+4.  After completing this, back in your browser you'll see the following, indicating that you have successfully installed the agent.![[Agents4.png]]
 
-   `> .\elastic-agent-9.2.1-windows-x86_64.msi --% INSTALLARGS="--url=https://172.16.0.13:8220 --enrollment-token=RG9uJ3QgdXNlIG15IGVucm9sbG1lbnQga2V5LCBnbyBnZXQgeW91ciBvd24hID46KA== --insecure"`
-   
-10. Next just follow the provided installation wizard. 
-
-![Windows10.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows10.png)
-
-11. After this you'll get confirmation back in your browser window that your windows host is now sending logs to elastic.![Windows11.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows11.png)
-12. Now click on the three bars in the top left and go to Analytics > Discover.![Windows12.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows12.png)
-13. You'll now be able to confirm that your windows host is sending logs to your SIEM. Congratulations! ![Windows13.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Windows13.png)
+### Windows
 
 # Configuring Alerts
 ## What to Create Alerts On
