@@ -219,32 +219,32 @@ You may remember that we were prompted to setup an integration when we first log
 ## Creating a Security Policy
 Here we'll show how to create a policy to be used for collecting logs that we can alert on as well as provide features for hosts that you would want in a typical SOC.
 
-1. Go to Fleet page. From the main menu this can be accessed from the three bars in the top left and clicking on Management > Fleet.![[Images/Elastic Images/SP1.png]]
-2. Next click on the "Agent policies" tab from the Fleet page.![[SP2.png]]
-3. Next click on "Create agent policy".![[SP3.png]]
-4. Choose a meaningful name like "Security Policy" and click on "Create agent policy".![[SP4.png]]
-5. Now click on your newly created policy.![[SP5.png]]
-6. Click on "Add integration" in the middle of the page.![[SP6.png]]
-7. In the pop up menu search for and select "Elastic Defend", give you integration a meaningful name, optionally give your integration a description, and for your configuration settings you can leave the environment type as "Traditional Endpoints" and leave "Complete EDR" as the chosen setting. Then click "Add integration". ![[SP7.png]]  ![[SP8.png]]
-8. You'll now be back at your policy page, click on your newly created Elastic Defend integration (You'll also see a system integration that exists to collect logs from linux hosts).![[SP9.png]]
-9. In your integration settings, scroll down to "Protection level" and switch it to "Detect". You can experiment with this later, however when starting out you should leave this on detect as to not cause unintended issues. Then select "Save integration".![[SP10.png]]
-10. You'll now be brought back to your policy page, if you don't plan on using any windows agents then you can skip these next steps. If you do, then click on "Add integration" again.![[SP11.png]]
-11. Search for the integration "Windows" and give your integration a meaningful name and description. Then go into "Collect events from the following Windows event log channels:", then modify this to as you see fit. The more boxes you check the more logs your SIEM will have to process. However it is highly recommended that you install Sysmon on your host and check the "Sysmon Operational" box. Personally I also like to check the "Preserve original event" for the Sysmon logs as well. You can find the Sysmon download [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) and I recommend to start out with one of the community Sysmon config files such as the one from SwiftOnSecurity found [here](https://github.com/SwiftOnSecurity/sysmon-config?tab=readme-ov-file). Once, done click on "Add integration". ![[SP12.png]]  ![[SP13.png]]
+1. Go to Fleet page. From the main menu this can be accessed from the three bars in the top left and clicking on Management > Fleet.![SP1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP1.png)
+2. Next click on the "Agent policies" tab from the Fleet page.![SP2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP2.png)
+3. Next click on "Create agent policy".![SP3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP3.png)
+4. Choose a meaningful name like "Security Policy" and click on "Create agent policy".![SP4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP4.png)
+5. Now click on your newly created policy.![SP5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP5.png)
+6. Click on "Add integration" in the middle of the page.![SP6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP6.png)
+7. In the pop up menu search for and select "Elastic Defend", give you integration a meaningful name, optionally give your integration a description, and for your configuration settings you can leave the environment type as "Traditional Endpoints" and leave "Complete EDR" as the chosen setting. Then click "Add integration". ![SP7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP7.png)  ![SP8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP8.png)
+8. You'll now be back at your policy page, click on your newly created Elastic Defend integration (You'll also see a system integration that exists to collect logs from linux hosts).![SP9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP9.png)
+9. In your integration settings, scroll down to "Protection level" and switch it to "Detect". You can experiment with this later, however when starting out you should leave this on detect as to not cause unintended issues. Then select "Save integration".![SP10.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP10.png)
+10. You'll now be brought back to your policy page, if you don't plan on using any windows agents then you can skip these next steps. If you do, then click on "Add integration" again.![SP11.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP11.png)
+11. Search for the integration "Windows" and give your integration a meaningful name and description. Then go into "Collect events from the following Windows event log channels:", then modify this to as you see fit. The more boxes you check the more logs your SIEM will have to process. However it is highly recommended that you install Sysmon on your host and check the "Sysmon Operational" box. Personally I also like to check the "Preserve original event" for the Sysmon logs as well. You can find the Sysmon download [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) and I recommend to start out with one of the community Sysmon config files such as the one from SwiftOnSecurity found [here](https://github.com/SwiftOnSecurity/sysmon-config?tab=readme-ov-file). Once, done click on "Add integration". ![SP12.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP12.png)  ![SP13.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP13.png)
 You'll now be back on the policy page with your policy setup. Now we can worry about adding agents from this policy to our hosts.
 
 ## Adding agents
 With our newly setup policy, adding agents will be pretty straight forward. However, there are some slight differences when installing an agent on Windows or on Linux. They will be observed below.
 
-1. From you policy page you want to install an agent from click on "Add agent"![[Agents1.png]]
+1. From you policy page you want to install an agent from click on "Add agent"![Agents1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents1.png)
 2. This will bring up a drop down menu, we can skip over step one as we only have on enrollment token and leave the option "Enroll in Fleet" as is in step 2. In step 3, you are prompted to select your OS and architecture/installation method. Below, we'll go over the differences for Linux Vs. Windows.
 
 ### Linux
-1. Select the architecture of your machine to retrieve the code you need to paste in to your host.![[Agents2.png]]
-2. Copy all but the last line of the provided commands and paste them into a Linux host that you want to collect logs from.![[Agents3.png]]
+1. Select the architecture of your machine to retrieve the code you need to paste in to your host.![Agents2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents2.png)
+2. Copy all but the last line of the provided commands and paste them into a Linux host that you want to collect logs from.![Agents3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents3.png)
 3. Now grab the final line that would install the elastic agent. Append `--insecure` to the end of it. This is necessary as we are using our own TLS certificates without a CA. After appending insecure, run the command and follow the directions provided. Your command should look something like the following:
    
    `$ sudo ./elastic-agent install --url=https://<YOUR-SIEM-IP>:8220 --enrollment-token=RHVkZSwgZ28gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRlIHRva2VuISA+Oig= -- insecure`
-4.  After completing this, back in your browser you'll see the following, indicating that you have successfully installed the agent.![[Agents4.png]]
+4.  After completing this, back in your browser you'll see the following, indicating that you have successfully installed the agent.![Agents4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents4.png)
 
 ### Windows
 
