@@ -235,7 +235,7 @@ You'll now be back on the policy page with your policy setup. Now we can worry a
 ## Adding agents
 With our newly setup policy, adding agents will be pretty straight forward. However, there are some slight differences when installing an agent on Windows or on Linux. They will be observed below.
 
-1. From you policy page you want to install an agent from click on "Add agent"![Agents1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents1.png)
+1. From you policy page you want to install an agent from click on "Actions" > "Add agent"![Agents1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents1.png)
 2. This will bring up a drop down menu, we can skip over step one as we only have on enrollment token and leave the option "Enroll in Fleet" as is in step 2. In step 3, you are prompted to select your OS and architecture/installation method. Below, we'll go over the differences for Linux Vs. Windows.
 
 ### Linux
