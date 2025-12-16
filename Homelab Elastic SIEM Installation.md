@@ -247,6 +247,18 @@ With our newly setup policy, adding agents will be pretty straight forward. Howe
 4.  After completing this, back in your browser you'll see the following, indicating that you have successfully installed the agent.![Agents4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents4.png)
 
 ### Windows
+1. Select the architecture of your machine to retrieve the code you need to paste in to your host.![Agents5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents5.png)
+2. Open an Administrator terminal on the host you want to collect from and switch to a directory that you can safely create files in, such as `C:\Windows\Temp`.![Agents6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents6.png)
+3. Go back over to your browser and copy all but the last line from Kibana and past that into your administrator terminal.![Agents7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents7.png)
+4. Now grab the final line that would install the elastic agent. Append `--insecure` to the end of it. This is necessary as we are using our own TLS certificates without a CA. After appending insecure, run the command and follow the directions provided. Your terminal should look something like the following:
+   
+   `> .\elastic-agent.exe install --url=https://172.16.0.13:8220 --enrollment-token=RHVkZSwgZ28gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRlIHRva2VuISA+Oig= -- insecure`
+   
+5. After completing this, back in your browser you'll see the following, indicating that you have successfully installed the agent.![Agents8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents8.png)
+
+
+After completing either of these you can navigate to your fleet page and observe that you have the agents installed. **NOTE**: In my example you'll see one of the hosts as offline, this was intentional for me. After you install a agent on a host you should be seeing it appear with a "Healthy" status. ![Agents9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents9.png)
+
 
 # Configuring Alerts
 ## What to Create Alerts On
