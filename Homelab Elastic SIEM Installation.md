@@ -20,8 +20,11 @@ This guide will be broken up into the following parts:
 	   1. [Linux](#linux)
 	   2. [Windows](#windows)
 4. [Configuring Alerts](#configuring-alerts)
-	1. [What to Create Alerts On](#configuring-alerts)
+	1. [What to Create Alerts On](#what-to-create-alerts-on)
 	2. [How to Create an Alert](#how-to-create-an-alert)
+    3. [Importing Alerts](#importing-alerts)
+    	1. [Elastic Provided](#elastic-provided)
+        2. [External Alerts](#external-alerts)
 5. [Hardening](#hardening)
 	1. [Configuring the Firewall](#configuring-the-firewall)
 	2. [Kibana Hardening](#kibana-hardening)
@@ -262,31 +265,51 @@ After completing either of these you can navigate to your fleet page and observe
 
 # Configuring Alerts
 ## What to Create Alerts On
-The primary purpose of your SIEM should be to keep an eye on all of your machines. However, it is not reasonable to search for IOCs on **every** host that you connect. So you should create alerts to notify you when something should be investigated. This can be a hard thing to do and there are many ways to go about it. One thing is true regardless, your alerting rules will continue to grow and change over time. In my personal opinion, the best place to start is with the [MITRE ATT&CK framework](https://attack.mitre.org/). This is a framework that lists a knowledge base of known adversary tactics and techniques. For your specific setup, not all tactics will be applicable to you, such as T1201 (Password Policy Discovery). However, it is a good place to start. I do plan to update this guide as I test and create more alerts, however it is pretty bare bones for now. Below I've included some other sources that give good advice on creating alerts for your SIEM.
+The primary purpose of your SIEM should be to keep an eye on all of your machines. However, it is not reasonable to search for IOCs on **every** host that you connect. So you should create alerts to notify you when something should be investigated. This can be a hard thing to do and there are many ways to go about it. One thing is true regardless, your alerting rules will continue to grow and change over time. In my personal opinion, the best place to start is with the [MITRE ATT&CK framework](https://attack.mitre.org/). This is a framework that lists a knowledge base of known adversary tactics and techniques. For your specific setup, not all tactics will be applicable to you, such as T1201 (Password Policy Discovery). However, it is a good place to start. Below I've included some other sources that give good advice on creating alerts for your SIEM.
 * [siem-alerts-types-and-best-practices](https://stellarcyber.ai/learn/siem-alerts-types-and-best-practices/)
 * [siem-alert-guide](https://www.comparitech.com/net-admin/siem-alert-guide/)
 ## How to Create an Alert
-The main point of an alert is to cause further action when a certain log or pattern of logs appear. In a traditional SOC this is where a playbook would run to automate the remediation process and or an analyst would jump in to investigate. For our purposes we will create an alert that appears on the alert page and prompts you to investigate. For our demonstrative purposes, we will create an alert for a failed linux authentication. 
+The main point of an alert is to cause further action when a certain log or pattern of logs appear. In a traditional SOC this is where a playbook would run to automate the remediation process and or an analyst would jump in to investigate. For our purposes we will create an alert that appears on the alert page and prompts you to investigate. For our demonstrative purposes, we will create a very simple alert for a failed linux authentication. 
 
-1. On the home page click the three bars in the top left and go to Security > Alerts. ![Alert1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert1.png)
-2. On the Alerts page, click on the "Manage Rules" button in the top right.![Alert2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert2.png)
-3. On the Rule page click on the "Create rule" button in the top left. ![Alert3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert3.png)
-4. **NOTE:** *At this point depending on what you want to alert on your actions may differ.* In the "Select rule type" window, type "Elasticsearch query", then click the Elasticsearch box.![Alert4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert4.png)
-5. You'll then be brought to a query rule page and prompted to select a query type. This is up to your preference, in my situation I find "ES|QL" to be my preferred query language due to its powerful capabilities. Then enter in the query you would want to alert for. In my instance I'm using a very basic failed authentication query. Additionally I've selected my time field of choice to be @timestamp
-   ```
-   FROM logs-*
-   | WHERE event.category : "authentication" AND event.outcome : "failure"
-   ```
-   ![Alert5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert5.png)
-6. Next, I've configured this query to run once every minute and alert to everyone for every instance found. **NOTE:** Sometimes alerting behavior can generate multiple lines. You can avoid alert fatigue be improving the schedule and the query itself. 
-7. We'll skip adding an action for this example and jump on to the third and final step creating rule details. I have filled mine out as seen below, but these are free for you to customize as you see fit. ![Alert7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert7.png)
-8. Next click on "Create rule" then "Save rule" when you are asked if you want no actions with your alert.![Alert8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert8.png)
-9. Finally we'll be brought to the rule's page. To verify if the alert is working you can either stay on the newly created rules page and observe the alerts tab at the bottom or navigate over to the alerts page via the drop down on the left and observe from there. Next jump onto a host with an agent setup and fail an authentication. For example
-   `$ su root`
-   You should see the alert pop up which is verifying that the SIEM is on the lookout for you. ![Alert9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert9.png)
-10. Now you can click and investigate the alert and take whatever action you deem necessary. NOTE: For our instance, once you click on the alert details the status will switch to resolved. You may not want this for your specific installation.
+1. From the Kibana homepage click the three bars in the top left and go to Security > Alerts. ![Alert1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert1.png)
+2. Next in the top left click on "Manage rules". ![Alert2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert2.png)
+3. Now you'll be on the rules page, click on "Create new rule"/"Manage rules" in the top left. ![Alert3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert3.png)
+4. You'll now be on the rule creation page.
+	1. For step 1, you can leave the rule definition as a Custom query.![Alert4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert4.png)
+	   If we wanted out rule to be more effienct we would find out what index it does alert on, for right now we'll leave them be. Next for the Custom query we will be using the following:
+	   
+	   `event.category : "authentication" and event.outcome : "failure"`
+	   
+	   Finally we'll leave the rest as is and click continue in the bottom right.![Alert5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert5.png)
+	2. Next we'll give our rule a meaningful name and description. This will be shown when an alert triggers so make sure what you type makes sense to you later. You can assign a different severity level and risk score if you want, but I'll leave mine as is. I'll tag this alert with "Authentication" to make rule management down the line easier. Finally, click the Continue button.![Alert6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert6.png)
+	3. Next we are directed to make a schedule for the rule, which is just how often it is run. With this alert I'll change the "Runs every" field to 1 minute. It is important to note the more you run a command the more intensive it is on the server. To progress click on the continue button.![Alert7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert7.png)
+	4. Finally for rule actions we will be skipping over them for the time being and just clicking "Create & enable rule"![Alert8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert8.png)
+5. Now you can fail an authentication on a connected Linux host (for example fail `$ su root`, wait a little and click the refresh button in the top right. Now, you'l be able to observe the alert triggering!![Alert9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert9.png)
 
-Congratulations, you now have a fully working SIEM with Elastic search! Before you go about doing anything else, below you'll find some basic hardening that you can do specific to elastic. If you are interested in more alerts I'll later be posting all of my alert queries. I'll later update this with a link.
+Now that we know how to make an alert we can write up a report about it and close it out (Click on those three dots to in the report then click on "Mark as closed"). However, making your own alerts is a lot of work. Next we'll go over importing pre-configured alerts.
+
+## Importing Alerts
+### Elastic Provided
+Luckily Elastic provides some alerting rules for us and makes them very easy to install.
+1. From the Elastic homepage go to Security > Alerts.![Alert1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert1.png)
+2. From the Alert page click on "Create new rule"/"Manage rules". ![EA1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA1.png)
+3. At the top click "Add Elastic rules". If prompted to leave a timeline, click confirm. ![EA2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA2.png)
+4. Click on the tags drop down on the right and search for and select "OS: Windows". ![EA3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA3.png)
+5. Scroll down to the bottom of the page and change the rows per page to 100.![EA4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA4).png
+6. Click the box in the top left to select all on your page. Then click the three vertical dots in the top left and click "Install and Enable" ![EA5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA5.png)
+7. Repeat step 6 until no more windows rules remain.
+8. Repeat steps 6 and 7, but now with "OS: Linux". Make sure "OS: Windows" now no longer selected.![EA6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA6.png)
+Now you have all of your Elastic rules installed and enabled!
+
+### External Alerts
+Elastic also offers the ability to install community curated alerts via ndjson files. There are many places to get these, but one of the most popular rule sets is the SIGMA rule set. This involves generating this ndjson file from the sigma-cli which is outside of the scope of this guide. However a really good tutorial can be found [here](https://www.securityinbits.com/detection-engineering/sigma-rules-elasticsearch/) by Security-in-bits.
+
+1. From the Elastic homepage go to Security > Alerts.![Alert1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert1.png)
+2. From the Alert page click on "Create new rule"/"Manage rules". ![EA1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA1.png)
+3. Next click on "Import rules".![ImportRules1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/ImportRules1.png)
+4. Now just drag and drop in your ndjson file, then click "Import". That's it! ![ImportRules2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/ImportRules2.png)
+
+Congratulations, you now have a fully working SIEM with Elastic search! Before you go about doing anything else, below you'll find some basic hardening that you can do specific to elastic. 
 
 # Hardening
 Here we'll be going over some admittedly basic hardening steps to do for your SIEM.
