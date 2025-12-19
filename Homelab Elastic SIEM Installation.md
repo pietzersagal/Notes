@@ -276,7 +276,7 @@ The main point of an alert is to cause further action when a certain log or patt
 3. Now you'll be on the rules page, click on "Create new rule"/"Manage rules" in the top left. ![Alert3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert3.png)
 4. You'll now be on the rule creation page.
 	1. For step 1, you can leave the rule definition as a Custom query.![Alert4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert4.png)
-	   If we wanted out rule to be more effienct we would find out what index it does alert on, for right now we'll leave them be. Next for the Custom query we will be using the following:
+	   If we wanted out rule to be more efficient we would find out what index it does alert on, for right now we'll leave them be. Next for the Custom query we will be using the following:
 	   
 	   `event.category : "authentication" and event.outcome : "failure"`
 	   
