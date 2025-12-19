@@ -83,12 +83,12 @@ Luckily verification that the service is running is quite easy.
 
 `$ systemctl status elasticsearch.service`
 
-This command should display that the service is active and enabled as shown here: ![Elastic_Running](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Running)
+This command should display that the service is active and enabled as shown here: ![Elastic_Running](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Running.png)
 Afterwards you can verify that the service is able to receive information by querying it. For the following command please replace the elastic password with the one you had stored in step 5 of [Elastic Search Installation Steps](#elastic-search-installation-steps).
 
 `$ sudo curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic:<ELASTIC-PASSWORD> https://localhost:9200`
 
-You should receive a response like the following:![Elastic_Verification](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Verification)
+You should receive a response like the following:![Elastic_Verification](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Elastic_Verification.png)
 
 Congratulations, once you have successfully installed elastic search!
 
@@ -116,14 +116,14 @@ Kibana is a web server that you host in order to view logs, setup fleets, create
 
    `$ systemctl status kibana`
 
-   That will show an output like so: ![Kibana_Verification](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Verification)
+   That will show an output like so: ![Kibana_Verification](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Verification.png)
    At the bottom we will see text like the following:
 
    `Go to http://172.16.0.13:5601/?code=892613 to get started.`
 
    Visit the URL provided in your web browser to enable your Kibana instance. Next, you will see a page prompting you for an enrollment token:
 
-   ![Kibana_Enrollment](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Enrollment)
+   ![Kibana_Enrollment](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Kibana_Enrollment.png)
 
    Generate an enrollment token with the following command
 
@@ -295,7 +295,7 @@ Luckily Elastic provides some alerting rules for us and makes them very easy to 
 2. From the Alert page click on "Create new rule"/"Manage rules". ![EA1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA1.png)
 3. At the top click "Add Elastic rules". If prompted to leave a timeline, click confirm. ![EA2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA2.png)
 4. Click on the tags drop down on the right and search for and select "OS: Windows". ![EA3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA3.png)
-5. Scroll down to the bottom of the page and change the rows per page to 100.![EA4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA4).png
+5. Scroll down to the bottom of the page and change the rows per page to 100.![EA4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA4.png)
 6. Click the box in the top left to select all on your page. Then click the three vertical dots in the top left and click "Install and Enable" ![EA5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA5.png)
 7. Repeat step 6 until no more windows rules remain.
 8. Repeat steps 6 and 7, but now with "OS: Linux". Make sure "OS: Windows" now no longer selected.![EA6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA6.png)
