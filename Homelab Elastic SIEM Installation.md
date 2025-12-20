@@ -1,5 +1,5 @@
 # Document Intent
-This is to serve is a guide for setting up an Elastic SIEM for homelab on your own hardware. This guide is designed for your SIEM to not be public facing, but to still expect others on your network. We will be following and referencing the official elastic documentation throughout this guide, but this guide will be more step by step than elastic's documentation with the addition of recommended configurations throughout. Your resources will likely differ from mine, so feel free to also follow along with Elastic's documentation for edge cases. 
+This is to serve is a guide for setting up an Elastic SIEM for homelab on your own hardware. Do note that if you have the resources available, it will probably be best to install [Security Onion](https://securityonionsolutions.com/), which includes Elastic, rather than just an Elastic SIEM. This guide is designed for your SIEM to not be public facing, but to still expect others on your network. We will be following and referencing the official elastic documentation throughout this guide, but this guide will be more step by step than elastic's documentation with the addition of recommended configurations throughout. Your resources will likely differ from mine, so feel free to also follow along with Elastic's documentation for edge cases. 
 
 **Note:** My configuration takes place on one virtual machine with 12 GB of Ram and a 1000 GB hard drive (though you can likely get away with a lot less). This installation takes place on an Ubuntu 24.04 Server with a statically assigned IP address.
 
@@ -14,7 +14,7 @@ This guide will be broken up into the following parts:
 	3. [Enable HTTPS](#enable-https)
 	4. [Fleet Setup](#fleet-setup)
 3. [Connecting an Agent](#connecting-an-agent)
-	1. [Why Agent Over Beats](#why-agent-over-beats)
+	1. [Why Agents Over Beats](#why-agents-over-beats)
 	2. [What are Integrations](#what-are-integrations)
 	3. [Adding Agents](#adding-agents)
 	   1. [Linux](#linux)
@@ -205,7 +205,7 @@ xpack.security.encryptionKey: <YOUR-SECURITY-KEY>
 13. After this you will be prompted to create an agent, click the 'X' for now. Then you should see a page like the following showing that you have your Fleet successfully setup! ![Fleet7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Fleet7.png)
 
 # Connecting an Agent
-## Why Agent Over Beats
+## Why Agents Over Beats
 There are two ways to send logs back to elastic search from a host machine. The first way that was integrated was via a beat. Beats were designed to be lightweight data shippers for a specific purpose, such as just getting a heartbeat from the system or collecting specific log files. Because of the nature of beats it is not uncommon to install multiple beats on one host in order to collect all wanted information. However, beats can be hard to manage due to there being no easy way to update them and potentially dealing with multiple beats on one host. Later on elastic introduced agents which provide the same functionality as many beats in one binary and are more easily manageable. Agents are not an exact one to one with beats, but are far easier to use, deploy, and manage. In addition, elastic is pushing users to swap over to agents wherever applicable. Therefore, we will only be going over the installation of Agents in this guide. If you are still curious about the differences, you can take a look at the official elastic documentation [here](https://www.elastic.co/docs/reference/fleet/beats-agent-comparison)
 
 ## What are Integrations
@@ -220,7 +220,7 @@ You may remember that we were prompted to setup an integration when we first log
 *Integration*: A set of rules an agent will follow.
 
 ## Creating a Security Policy
-Here we'll show how to create a policy to be used for collecting logs that we can alert on as well as provide features for hosts that you would want in a typical SOC.
+Here we'll show how to create a policy to be used for collecting logs that we can alert on, as well as provide features for hosts that you would want in a typical SOC.
 
 1. Go to Fleet page. From the main menu this can be accessed from the three bars in the top left and clicking on Management > Fleet.![SP1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP1.png)
 2. Next click on the "Agent policies" tab from the Fleet page.![SP2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP2.png)
@@ -228,21 +228,21 @@ Here we'll show how to create a policy to be used for collecting logs that we ca
 4. Choose a meaningful name like "Security Policy" and click on "Create agent policy".![SP4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP4.png)
 5. Now click on your newly created policy.![SP5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP5.png)
 6. Click on "Add integration" in the middle of the page.![SP6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP6.png)
-7. In the pop up menu search for and select "Elastic Defend", give you integration a meaningful name, optionally give your integration a description, and for your configuration settings you can leave the environment type as "Traditional Endpoints" and leave "Complete EDR" as the chosen setting. Then click "Add integration". ![SP7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP7.png)  ![SP8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP8.png)
+7. In the pop up menu search for and select "Elastic Defend", give your integration a meaningful name, optionally give your integration a description, and for your configuration settings you can leave the environment type as "Traditional Endpoints" and leave "Complete EDR" as the chosen setting. Then click "Add integration". ![SP7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP7.png)  ![SP8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP8.png)
 8. You'll now be back at your policy page, click on your newly created Elastic Defend integration (You'll also see a system integration that exists to collect logs from linux hosts).![SP9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP9.png)
 9. In your integration settings, scroll down to "Protection level" and switch it to "Detect". You can experiment with this later, however when starting out you should leave this on detect as to not cause unintended issues. Then select "Save integration".![SP10.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP10.png)
 10. You'll now be brought back to your policy page, if you don't plan on using any windows agents then you can skip these next steps. If you do, then click on "Add integration" again.![SP11.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP11.png)
-11. Search for the integration "Windows" and give your integration a meaningful name and description. Then go into "Collect events from the following Windows event log channels:", then modify this to as you see fit. The more boxes you check the more logs your SIEM will have to process. However it is highly recommended that you install Sysmon on your host and check the "Sysmon Operational" box. Personally I also like to check the "Preserve original event" for the Sysmon logs as well. You can find the Sysmon download [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) and I recommend to start out with one of the community Sysmon config files such as the one from SwiftOnSecurity found [here](https://github.com/SwiftOnSecurity/sysmon-config?tab=readme-ov-file). Once, done click on "Add integration". ![SP12.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP12.png)  ![SP13.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP13.png)
+11. Search for the integration "Windows" and give your integration a meaningful name and description. Then go into "Collect events from the following Windows event log channels:", then modify this to as you see fit. The more boxes you check the more logs your SIEM will have to process. However it is highly recommended that you install Sysmon on your host and check the "Sysmon Operational" box. Personally I also like to check the "Preserve original event" for the Sysmon logs as well. You can find the Sysmon download [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) and I recommend to start out with one of the community Sysmon config files such as the one from SwiftOnSecurity found [here](https://github.com/SwiftOnSecurity/sysmon-config?tab=readme-ov-file). Once done click on "Add integration". ![SP12.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP12.png)  ![SP13.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/SP13.png)
 You'll now be back on the policy page with your policy setup. Now we can worry about adding agents from this policy to our hosts.
 
 ## Adding agents
 With our newly setup policy, adding agents will be pretty straight forward. However, there are some slight differences when installing an agent on Windows or on Linux. They will be observed below.
 
-1. From you policy page you want to install an agent from click on "Actions" > "Add agent"![Agents1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents1.png)
-2. This will bring up a drop down menu, we can skip over step one as we only have on enrollment token and leave the option "Enroll in Fleet" as is in step 2. In step 3, you are prompted to select your OS and architecture/installation method. Below, we'll go over the differences for Linux Vs. Windows.
+1. Navigate to the policy page for the policy that you want to create an agent on. Click on "Actions" > "Add agent"![Agents1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents1.png)
+2. This will bring up a drop down menu, we can skip over step one as we only have on enrollment token and leave the option "Enroll in Fleet" selected in step 2. In step 3, you are prompted to select your OS and architecture/installation method. Below, we'll go over the differences for Linux Vs. Windows.
 
 ### Linux
-1. Select the architecture of your machine to retrieve the code you need to paste in to your host.![Agents2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents2.png)
+1. Select your OS architecture. This will provide the code you need to past into your host's terminal.![Agents2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents2.png)
 2. Copy all but the last line of the provided commands and paste them into a Linux host that you want to collect logs from.![Agents3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents3.png)
 3. Now grab the final line that would install the elastic agent. Append `--insecure` to the end of it. This is necessary as we are using our own TLS certificates without a CA. After appending insecure, run the command and follow the directions provided. Your command should look something like the following:
    
@@ -250,7 +250,7 @@ With our newly setup policy, adding agents will be pretty straight forward. Howe
 4.  After completing this, back in your browser you'll see the following, indicating that you have successfully installed the agent.![Agents4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents4.png)
 
 ### Windows
-1. Select the architecture of your machine to retrieve the code you need to paste in to your host.![Agents5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents5.png)
+1. Select your OS architecture. This will provide the code you need to past into your host's terminal.![Agents5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents5.png)
 2. Open an Administrator terminal on the host you want to collect from and switch to a directory that you can safely create files in, such as `C:\Windows\Temp`.![Agents6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents6.png)
 3. Go back over to your browser and copy all but the last line from Kibana and past that into your administrator terminal.![Agents7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents7.png)
 4. Now grab the final line that would install the elastic agent. Append `--insecure` to the end of it. This is necessary as we are using our own TLS certificates without a CA. After appending insecure, run the command and follow the directions provided. Your terminal should look something like the following:
@@ -260,7 +260,7 @@ With our newly setup policy, adding agents will be pretty straight forward. Howe
 5. After completing this, back in your browser you'll see the following, indicating that you have successfully installed the agent.![Agents8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents8.png)
 
 
-After completing either of these you can navigate to your fleet page and observe that you have the agents installed. **NOTE**: In my example you'll see one of the hosts as offline, this was intentional for me. After you install a agent on a host you should be seeing it appear with a "Healthy" status. ![Agents9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents9.png)
+After completing either of these you can navigate to your fleet page and observe that you have the agents installed. **NOTE**: In my example you'll see one of the hosts as offline, this was intentional for me. After you install a agent on a host you should see it appear with a "Healthy" status. ![Agents9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Agents9.png)
 
 
 # Configuring Alerts
@@ -276,7 +276,7 @@ The main point of an alert is to cause further action when a certain log or patt
 3. Now you'll be on the rules page, click on "Create new rule"/"Manage rules" in the top left. ![Alert3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert3.png)
 4. You'll now be on the rule creation page.
 	1. For step 1, you can leave the rule definition as a Custom query.![Alert4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert4.png)
-	   If we wanted out rule to be more efficient we would find out what index it does alert on, for right now we'll leave them be. Next for the Custom query we will be using the following:
+	   If we wanted our rule to be more efficient we would find out what index the alerting logs come from, for right now we'll leave them be. Next for the Custom query we will be using the following:
 	   
 	   `event.category : "authentication" and event.outcome : "failure"`
 	   
@@ -284,7 +284,7 @@ The main point of an alert is to cause further action when a certain log or patt
 	2. Next we'll give our rule a meaningful name and description. This will be shown when an alert triggers so make sure what you type makes sense to you later. You can assign a different severity level and risk score if you want, but I'll leave mine as is. I'll tag this alert with "Authentication" to make rule management down the line easier. Finally, click the Continue button.![Alert6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert6.png)
 	3. Next we are directed to make a schedule for the rule, which is just how often it is run. With this alert I'll change the "Runs every" field to 1 minute. It is important to note the more you run a command the more intensive it is on the server. To progress click on the continue button.![Alert7.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert7.png)
 	4. Finally for rule actions we will be skipping over them for the time being and just clicking "Create & enable rule"![Alert8.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert8.png)
-5. Now you can fail an authentication on a connected Linux host (for example fail `$ su root`, wait a little and click the refresh button in the top right. Now, you'l be able to observe the alert triggering!![Alert9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert9.png)
+5. Now you can fail an authentication on a connected Linux host (for example fail `$ su root`). Wait a little and click the refresh button in the top right. Now, you'l be able to observe the alert triggering!![Alert9.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert9.png)
 
 Now that we know how to make an alert we can write up a report about it and close it out (Click on those three dots to in the report then click on "Mark as closed"). However, making your own alerts is a lot of work. Next we'll go over importing pre-configured alerts.
 
@@ -294,11 +294,11 @@ Luckily Elastic provides some alerting rules for us and makes them very easy to 
 1. From the Elastic homepage go to Security > Alerts.![Alert1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/Alert1.png)
 2. From the Alert page click on "Create new rule"/"Manage rules". ![EA1.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA1.png)
 3. At the top click "Add Elastic rules". If prompted to leave a timeline, click confirm. ![EA2.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA2.png)
-4. Click on the tags drop down on the right and search for and select "OS: Windows". ![EA3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA3.png)
+4. Click on the tags drop down on the right then search for and select "OS: Windows". ![EA3.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA3.png)
 5. Scroll down to the bottom of the page and change the rows per page to 100.![EA4.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA4.png)
 6. Click the box in the top left to select all on your page. Then click the three vertical dots in the top left and click "Install and Enable" ![EA5.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA5.png)
 7. Repeat step 6 until no more windows rules remain.
-8. Repeat steps 6 and 7, but now with "OS: Linux". Make sure "OS: Windows" now no longer selected.![EA6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA6.png)
+8. Repeat steps 6 and 7, but now with "OS: Linux". Make sure "OS: Windows" is no longer selected.![EA6.png](https://github.com/pietzersagal/Notes/blob/main/Images/Elastic_SIEM/EA6.png)
 Now you have all of your Elastic rules installed and enabled!
 
 ### External Alerts
