@@ -62,7 +62,7 @@ Luckily the installation of Elastic Search is pretty straight forward to the off
    `network.host: <YOUR-IP>`
    This will enable elastic search to listen on all interfaces. In addition add the following line below your newly created one:
    
-   `#transport.host: <YOUR-IP>`. 
+   `transport.host: <YOUR-IP>`. 
 7. Next enable systemd journal logging for the elasticsearch service by navigating to your elasticsearch.service file. In my case it is located at `/usr/lib/systemd/system/elasticsearch.service`
    Find the line
    
